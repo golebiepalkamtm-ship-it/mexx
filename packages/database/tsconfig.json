@@ -1,0 +1,4 @@
+{
+  "extends": "@mexx/config/tsconfig.json",
+  "include": ["**/*.ts"]
+}

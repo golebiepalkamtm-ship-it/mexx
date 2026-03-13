@@ -1,0 +1,19 @@
+﻿backend_architecture:
+  model: microservices
+  description: "Dla dużej platformy najlepszy model to microservices."
+  services:
+    - Auth Service
+    - User Service
+    - Messaging Service
+    - Streaming Service
+    - Payment Service
+    - Search Service
+    - Notification Service
+realtime_architecture:
+  technologies:
+    - WebSocket
+    - Redis Pub/Sub
+  use_cases:
+    - czatu
+    - powiadomień
+    - streamów

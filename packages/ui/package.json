@@ -1,0 +1,19 @@
+{
+  "name": "@mexx/ui",
+  "version": "0.0.0",
+  "main": "./src/index.tsx",
+  "types": "./src/index.tsx",
+  "scripts": {
+    "lint": "eslint \"**/*.ts*\""
+  },
+  "dependencies": {
+    "react": "latest",
+    "react-native": "latest"
+  },
+  "devDependencies": {
+    "@mexx/config": "*",
+    "@types/react": "latest",
+    "@types/react-native": "latest",
+    "typescript": "latest"
+  }
+}

@@ -1,0 +1,24 @@
+﻿token_economy:
+  definition: "Token to waluta platformy."
+  user_actions:
+    - kupić tokeny
+    - wysyłać napiwki
+    - odblokować treści
+    - płacić za prywatne show
+  token_flow:
+    step_1: User kupuje tokeny
+    step_2: wysyła napiwek
+    step_3: platforma pobiera prowizję
+    step_4: reszta trafia do twórcy
+revenue_share:
+  model: "Typowy model"
+  ratios:
+    platform: "40%"
+    creator: "60%"
+commission_system:
+  sources:
+    - token purchase fee
+    - tip commission
+    - premium accounts
+    - boost ogłoszeń
+    - reklamy

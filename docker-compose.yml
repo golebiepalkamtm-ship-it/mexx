@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: mexx-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: mexx_user
+      POSTGRES_PASSWORD: mexx_password
+      POSTGRES_DB: mexx_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: mexx-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes

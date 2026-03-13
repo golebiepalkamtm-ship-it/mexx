@@ -1,0 +1,294 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = []
+}
+
+// 1. Users & Authentication
+model User {
+  id            String    @id @default(cuid())
+  supabaseId    String?   @unique @map("supabase_id")
+  email         String    @unique
+  passwordHash  String?   @map("password_hash") // Optional for now until registration logic
+  username      String?   @unique               // Optional for now
+  name          String?
+  gender        String?
+  orientation   String?
+  birthDate     DateTime? @map("birth_date")
+  location      String?
+  bio           String?
+  profilePhoto  String?   @map("profile_photo")
+  verified      Boolean   @default(false)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastLogin     DateTime? @map("last_login")
+  status        String    @default("ACTIVE") // ACTIVE, BANNED, SUSPENDED
+
+  // Relations
+  media         UserMedia[]
+  posts         Post[]
+  comments      Comment[]
+  services      Service[]
+  reviews       ServiceReview[]
+  wallet        TokensWallet?
+  transactions  TokenTransaction[]
+  
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+
+  sentTips      StreamTip[] @relation("SentTips")
+  
+  hostStreams   Stream[] @relation("HostStreams")
+  
+  hostPrivateShows   PrivateShow[] @relation("HostPrivateShows")
+  viewerPrivateShows PrivateShow[] @relation("ViewerPrivateShows")
+
+  purchasedServices ServicePurchase[] @relation("BuyerPurchases")
+  soldServices      ServicePurchase[] @relation("SellerSales")
+
+  postLikes         PostLike[]
+
+  followers     UserFollow[] @relation("Following")
+  following     UserFollow[] @relation("Follower")
+
+  contentUnlocks ContentUnlock[]
+
+  @@map("users")
+}
+
+// 2. User User Media
+model UserMedia {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  type       String   // PHOTO, VIDEO
+  url        String
+  visibility String   @default("PUBLIC") // PUBLIC, PRIVATE, SUBSCRIBERS
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("user_media")
+}
+
+// 3. Social Relations
+model UserFollow {
+  id          String   @id @default(cuid())
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  follower    User     @relation("Follower", fields: [followerId], references: [id])
+  following   User     @relation("Following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+  @@map("user_follow")
+}
+
+// 4. Messages
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String   @map("sender_id")
+  receiverId  String   @map("receiver_id")
+  messageText String?  @map("message_text")
+  mediaUrl    String?  @map("media_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  readStatus  Boolean  @default(false) @map("read_status")
+
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@map("messages")
+}
+
+// 5. Streams (Live)
+model Stream {
+  id          String   @id @default(cuid())
+  streamerId  String   @map("streamer_id")
+  title       String
+  category    String?
+  status      String   @default("LIVE") // LIVE, OFFLINE
+  viewerCount Int      @default(0) @map("viewer_count")
+  startedAt   DateTime @default(now()) @map("started_at")
+  endedAt     DateTime? @map("ended_at")
+
+  streamer    User     @relation("HostStreams", fields: [streamerId], references: [id])
+  tips        StreamTip[]
+
+  @@map("streams")
+}
+
+model StreamTip {
+  id          String   @id @default(cuid())
+  streamId    String   @map("stream_id")
+  senderId    String   @map("sender_id")
+  tokenAmount Int      @map("token_amount")
+  message     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  stream      Stream   @relation(fields: [streamId], references: [id])
+  sender      User     @relation("SentTips", fields: [senderId], references: [id])
+
+  @@map("stream_tips")
+}
+
+model PrivateShow {
+  id          String   @id @default(cuid())
+  streamerId  String   @map("streamer_id")
+  viewerId    String   @map("viewer_id")
+  priceTokens Int      @map("price_tokens")
+  startedAt   DateTime @default(now()) @map("started_at")
+  endedAt     DateTime? @map("ended_at")
+
+  streamer    User     @relation("HostPrivateShows", fields: [streamerId], references: [id])
+  viewer      User     @relation("ViewerPrivateShows", fields: [viewerId], references: [id])
+
+  @@map("private_show")
+}
+
+// 6. Social Feed (Posts)
+model Post {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  content       String?
+  mediaUrl      String?  @map("media_url")
+  createdAt     DateTime @default(now()) @map("created_at")
+  likesCount    Int      @default(0) @map("likes_count")
+  commentsCount Int      @default(0) @map("comments_count")
+  isLocked      Boolean  @default(false) @map("is_locked")
+  unlockPrice   Int?     @map("unlock_price")
+
+  user          User     @relation(fields: [userId], references: [id])
+  comments      Comment[]
+  likes         PostLike[]
+  unlocks       ContentUnlock[]
+
+  @@map("posts")
+}
+
+model ContentUnlock {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  postId    String   @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@map("content_unlocks")
+}
+
+model PostLike {
+  id        String   @id @default(cuid())
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post      Post     @relation(fields: [postId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@map("post_likes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  text      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post      Post     @relation(fields: [postId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("comments")
+}
+
+// 7. Economy (Tokens)
+model TokensWallet {
+  userId    String   @id @map("user_id")
+  balance   Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("tokens_wallet")
+}
+
+model TokenTransaction {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  type        String   // PURCHASE, TIP, PRIVATE_SHOW, UNLOCK
+  amount      Int
+  referenceId String?  @map("reference_id") // ID of related item (e.g. stream_id)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("token_transactions")
+}
+
+// 8. Services (Marketplace)
+model Service {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  title       String
+  description String?
+  price       Int      @default(0)
+  location    String?
+  category    String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id])
+  media       ServiceMedia[]
+  reviews     ServiceReview[]
+  purchases   ServicePurchase[]
+
+  @@map("services")
+}
+
+model ServicePurchase {
+  id        String   @id @default(cuid())
+  serviceId String   @map("service_id")
+  buyerId   String   @map("buyer_id")
+  sellerId  String   @map("seller_id")
+  price     Int      // Price in tokens at moment of purchase
+  status    String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  service   Service  @relation(fields: [serviceId], references: [id])
+  buyer     User     @relation("BuyerPurchases", fields: [buyerId], references: [id])
+  seller    User     @relation("SellerSales", fields: [sellerId], references: [id])
+
+  @@map("service_purchases")
+}
+
+model ServiceMedia {
+  id        String   @id @default(cuid())
+  serviceId String   @map("service_id")
+  url       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  service   Service  @relation(fields: [serviceId], references: [id])
+
+  @@map("service_media")
+}
+
+model ServiceReview {
+  id        String   @id @default(cuid())
+  serviceId String   @map("service_id")
+  userId    String   @map("user_id")
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  service   Service  @relation(fields: [serviceId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("service_reviews")
+}

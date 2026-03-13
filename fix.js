@@ -1,0 +1,1 @@
+const fs=require('fs'); let c=fs.readFileSync('apps/web/app/marketplace/[id]/page.tsx','utf8'); c=c.replace(/gql\\\\/g, 'gql\').replace(/\\\\;/g, '\;'); fs.writeFileSync('apps/web/app/marketplace/[id]/page.tsx', c);

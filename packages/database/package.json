@@ -1,0 +1,18 @@
+{
+  "name": "@mexx/database",
+  "version": "0.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@prisma/client": "5.10.2"
+  },
+  "devDependencies": {
+    "prisma": "5.10.2",
+    "typescript": "latest",
+    "@mexx/config": "*"
+  },
+  "scripts": {
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "generate": "prisma generate"
+  }
+}
