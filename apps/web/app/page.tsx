@@ -75,16 +75,16 @@ function HeartBurst({ x, y }: { x: number; y: number }) {
 export default function Home() {
   const { data, loading, error } = useQuery(GET_FEED);
   const [hearts, setHearts] = useState<
-    Array<{ id: number; x: number; y: number }>
+    Array<{ id: number; x: number; y: number; postId: string }>
   >([]);
 
   const handleDoubleTap = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent, postId: string) => {
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const id = Date.now();
-      setHearts((prev) => [...prev, { id, x, y }]);
+      setHearts((prev) => [...prev, { id, x, y, postId }]);
       setTimeout(() => {
         setHearts((prev) => prev.filter((h) => h.id !== id));
       }, 900);
@@ -127,7 +127,7 @@ export default function Home() {
               key={post.id}
               variants={cardVariants}
               className="relative aspect-[9/16] rounded-3xl overflow-hidden glass-card group cursor-pointer"
-              onDoubleClick={handleDoubleTap}
+              onDoubleClick={(e) => handleDoubleTap(e, post.id)}
               whileHover={{ scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
@@ -148,9 +148,11 @@ export default function Home() {
 
               {/* Heart burst animation layer */}
               <AnimatePresence>
-                {hearts.map((h) => (
-                  <HeartBurst key={h.id} x={h.x} y={h.y} />
-                ))}
+                {hearts
+                  .filter((h) => h.postId === post.id)
+                  .map((h) => (
+                    <HeartBurst key={h.id} x={h.x} y={h.y} />
+                  ))}
               </AnimatePresence>
 
               {/* Bottom gradient overlay */}

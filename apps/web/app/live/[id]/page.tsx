@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { useParams } from "next/navigation";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const GET_STREAM = gql`
@@ -34,7 +34,7 @@ const SEND_TIP = gql`
 `;
 
 function TipParticle({ id, onDone }: { id: number; onDone: (id: number) => void }) {
-  const x = Math.random() * 200 - 100;
+  const x = useMemo(() => Math.random() * 200 - 100, []);
   useEffect(() => {
     const t = setTimeout(() => onDone(id), 1500);
     return () => clearTimeout(t);
