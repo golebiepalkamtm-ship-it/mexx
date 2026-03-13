@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { useParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 const GET_MESSAGES = gql`
   query GetMessages($otherUserId: String!) {
@@ -24,6 +25,16 @@ const SEND_MESSAGE = gql`
     }
   }
 `;
+
+const bubbleVariants = {
+  hidden: { opacity: 0, scale: 0.8, y: 10 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 0.3, ease: [0.19, 1, 0.22, 1] },
+  },
+};
 
 export default function ChatPage() {
   const { id: otherUserId } = useParams();
@@ -64,63 +75,76 @@ export default function ChatPage() {
     });
   };
 
-  // Safe check to avoid hydration errors or auth issues (basic)
-  // In real app, we would get current user ID from context
   const isMe = (senderId: string) => {
-    // Temporary workaround: we assume outgoing message if not from otherUser
-    // Better way: compare with currentUser from Auth Context
     return senderId !== otherUserId;
   };
 
   if (loading && !data)
-    return <div className="text-center p-10">Ładowanie...</div>;
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <motion.div
+          className="text-white/30"
+          animate={{ opacity: [0.3, 1, 0.3] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          Ładowanie...
+        </motion.div>
+      </div>
+    );
 
   return (
-    <main className="flex flex-col h-screen bg-gray-900 text-white pt-16 pb-20 md:pb-0">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {data?.messages?.map((msg: any) => {
-          const me = isMe(msg.senderId);
-          return (
-            <div
-              key={msg.id}
-              className={`flex ${me ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[70%] p-3 rounded-2xl ${
-                  me
-                    ? "bg-blue-600 rounded-br-none"
-                    : "bg-gray-700 rounded-bl-none"
-                }`}
+    <main className="flex flex-col h-screen bg-background text-white pt-16 pb-20 md:pb-0">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <AnimatePresence>
+          {data?.messages?.map((msg: any) => {
+            const me = isMe(msg.senderId);
+            return (
+              <motion.div
+                key={msg.id}
+                className={`flex ${me ? "justify-end" : "justify-start"}`}
+                variants={bubbleVariants}
+                initial="hidden"
+                animate="visible"
               >
-                <p>{msg.content}</p>
-                <span className="text-[10px] opacity-70 block mt-1 text-right">
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+                <div
+                  className={`max-w-[70%] p-3.5 rounded-2xl ${
+                    me
+                      ? "bg-gradient-to-br from-primary/80 to-primary/60 rounded-br-sm"
+                      : "glass rounded-bl-sm"
+                  }`}
+                >
+                  <p className="text-sm leading-relaxed">{msg.content}</p>
+                  <span className="text-[10px] opacity-50 block mt-1.5 text-right">
+                    {new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 bg-gray-800 border-t border-gray-700">
-        <form onSubmit={handleSend} className="flex gap-2 max-w-4xl mx-auto">
+      <div className="p-4 glass-strong border-t border-white/[0.04]">
+        <form onSubmit={handleSend} className="flex gap-3 max-w-4xl mx-auto">
           <input
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Napisz wiadomość..."
-            className="flex-1 p-3 rounded-full bg-gray-900 border border-gray-600 focus:border-blue-500 outline-none px-6"
+            className="input-premium flex-1 rounded-full px-6"
           />
-          <button
+          <motion.button
             type="submit"
             disabled={!inputMessage.trim()}
-            className="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center hover:bg-blue-700 transition disabled:opacity-50"
+            className="btn-premium w-12 h-12 rounded-full flex items-center justify-center disabled:opacity-30"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
             ➤
-          </button>
+          </motion.button>
         </form>
       </div>
     </main>

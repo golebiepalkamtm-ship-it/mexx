@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent } from 'react';
-import { useMutation, gql } from '@apollo/client';
-import { useRouter } from 'next/navigation';
+import { useState, ChangeEvent, FormEvent } from "react";
+import { useMutation, gql } from "@apollo/client";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 const CREATE_SERVICE = gql`
   mutation CreateService($createServiceInput: CreateServiceInput!) {
@@ -16,16 +17,16 @@ const CREATE_SERVICE = gql`
 export default function CreateServicePage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    price: '',
-    location: '',
-    category: 'IT & Tech'
+    title: "",
+    description: "",
+    price: "",
+    location: "",
+    category: "IT & Tech",
   });
 
   const [createService, { loading }] = useMutation(CREATE_SERVICE, {
-      onCompleted: () => router.push('/marketplace'),
-      refetchQueries: ['GetServices']
+    onCompleted: () => router.push("/marketplace"),
+    refetchQueries: ["GetServices"],
   });
 
   const handleSubmit = async (e: FormEvent) => {
@@ -36,106 +37,143 @@ export default function CreateServicePage() {
           createServiceInput: {
             title: formData.title,
             description: formData.description,
-            price: parseInt(formData.price), // Int for Tokens
+            price: parseInt(formData.price),
             location: formData.location,
-            category: formData.category
+            category: formData.category,
           },
         },
       });
     } catch (err) {
       console.error(err);
-      alert('Błąd podczas dodawania ogłoszenia');
+      alert("Błąd podczas dodawania ogłoszenia");
     }
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
-    <main className="min-h-screen bg-gray-900 text-white p-6 pt-24 flex items-center justify-center">
-      <div className="w-full max-w-2xl bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
-        <h1 className="text-3xl font-bold mb-6 text-center">Dodaj Ogłoszenie</h1>
-        
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Tytuł ogłoszenia</label>
-            <input
-              name="title"
-              required
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full p-3 rounded bg-gray-900 border border-gray-700 focus:border-indigo-500 outline-none transition"
-              placeholder="np. Zaprojektuję logo..."
-            />
+    <main className="min-h-screen p-6 pt-8 md:pt-24 flex items-center justify-center">
+      <motion.div
+        className="w-full max-w-2xl glass-card rounded-3xl p-8 relative overflow-hidden"
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1] }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+
+        <div className="relative z-10">
+          <div className="text-center mb-8">
+            <motion.div
+              className="text-4xl mb-3"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              💼
+            </motion.div>
+            <h1 className="text-3xl font-black text-gradient-brand">
+              Dodaj Ogłoszenie
+            </h1>
+            <p className="text-white/30 text-sm mt-1">
+              Sprzedawaj usługi za tokeny
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-             <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Cena (Tokeny)</label>
-                <input
-                name="price"
-                type="number"
-                required
-                min="0"
-                step="1"
-                value={formData.price}
-                onChange={handleChange}
-                className="w-full p-3 rounded bg-gray-900 border border-gray-700 focus:border-indigo-500 outline-none transition"
-                placeholder="100"
-                />
-            </div>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Kategoria</label>
-                <select
-                    name="category"
-                    aria-label="Kategoria ogłoszenia"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full p-3 rounded bg-gray-900 border border-gray-700 focus:border-indigo-500 outline-none transition"
-                >
-                    <option value="IT & Tech">IT & Tech</option>
-                    <option value="Dom & Ogród">Dom & Ogród</option>
-                    <option value="Edukacja">Edukacja</option>
-                    <option value="Zdrowie">Zdrowie</option>
-                    <option value="Rozrywka">Rozrywka</option>
-                </select>
+              <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
+                Tytuł ogłoszenia
+              </label>
+              <input
+                name="title"
+                required
+                value={formData.title}
+                onChange={handleChange}
+                className="input-premium"
+                placeholder="np. Zaprojektuję logo..."
+              />
             </div>
-          </div>
 
-          <div>
-             <label className="block text-sm font-medium text-gray-400 mb-1">Lokalizacja</label>
-             <input
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              className="w-full p-3 rounded bg-gray-900 border border-gray-700 focus:border-indigo-500 outline-none transition"
-              placeholder="np. Warszawa / Online"
-             />
-          </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
+                  Cena (Tokeny)
+                </label>
+                <input
+                  name="price"
+                  type="number"
+                  required
+                  min="0"
+                  step="1"
+                  value={formData.price}
+                  onChange={handleChange}
+                  className="input-premium"
+                  placeholder="100"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
+                  Kategoria
+                </label>
+                <select
+                  name="category"
+                  aria-label="Kategoria ogłoszenia"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="input-premium"
+                >
+                  <option value="IT & Tech">IT & Tech</option>
+                  <option value="Dom & Ogród">Dom & Ogród</option>
+                  <option value="Edukacja">Edukacja</option>
+                  <option value="Zdrowie">Zdrowie</option>
+                  <option value="Rozrywka">Rozrywka</option>
+                </select>
+              </div>
+            </div>
 
-          <div>
-             <label className="block text-sm font-medium text-gray-400 mb-1">Opis szczegółowy</label>
-             <textarea
-              name="description"
-              required
-              rows={5}
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full p-3 rounded bg-gray-900 border border-gray-700 focus:border-indigo-500 outline-none transition"
-              placeholder="Opisz swoją usługę..."
-             />
-          </div>
+            <div>
+              <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
+                Lokalizacja
+              </label>
+              <input
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                className="input-premium"
+                placeholder="np. Warszawa / Online"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition"
-          >
-            {loading ? 'Publikowanie...' : 'Opublikuj Ogłoszenie'}
-          </button>
-        </form>
-      </div>
+            <div>
+              <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
+                Opis szczegółowy
+              </label>
+              <textarea
+                name="description"
+                required
+                rows={5}
+                value={formData.description}
+                onChange={handleChange}
+                className="input-premium resize-none"
+                placeholder="Opisz swoją usługę..."
+              />
+            </div>
+
+            <motion.button
+              type="submit"
+              disabled={loading}
+              className="w-full btn-premium py-4 rounded-2xl text-sm font-bold disabled:opacity-50"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {loading ? "Publikowanie..." : "Opublikuj Ogłoszenie"}
+            </motion.button>
+          </form>
+        </div>
+      </motion.div>
     </main>
   );
 }
