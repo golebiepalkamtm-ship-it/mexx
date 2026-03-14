@@ -2,6 +2,7 @@
 
 import { useQuery, gql } from "@apollo/client";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 const GET_STREAMS = gql`
   query GetStreams {
@@ -18,64 +19,125 @@ const GET_STREAMS = gql`
   }
 `;
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.5, ease: [0.19, 1, 0.22, 1] },
+  },
+};
+
 export default function LivePage() {
   const { data, loading, error } = useQuery(GET_STREAMS, {
     pollInterval: 5000,
   });
 
   if (loading && !data)
-    return <div className="text-center p-10">Ładowanie transmisji...</div>;
+    return (
+      <div className="min-h-screen pt-24 px-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="aspect-video rounded-3xl bg-surface shimmer"
+            />
+          ))}
+        </div>
+      </div>
+    );
 
   return (
-    <main className="min-h-screen bg-gray-900 text-white p-6 pt-24">
+    <main className="min-h-screen p-6 pt-8 md:pt-24">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <span className="w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
-            Mexx LIVE
-          </h1>
-          <Link
-            href="/live/create"
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold transition"
-          >
-            Start Transmisji
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data?.streams?.map((stream: any) => (
-            <Link
-              key={stream.id}
-              href={`/live/${stream.id}`}
-              className="group relative aspect-video bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-red-500 transition"
+        <motion.div
+          className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div>
+            <h1 className="text-4xl font-black flex items-center gap-3">
+              <span className="relative">
+                <span className="w-3 h-3 bg-red-500 rounded-full inline-block" />
+                <span className="absolute inset-0 w-3 h-3 bg-red-500 rounded-full animate-ping opacity-75" />
+              </span>
+              <span className="text-gradient-brand">LIVE</span>
+            </h1>
+            <p className="text-white/40 text-sm mt-1">Transmisje na żywo</p>
+          </div>
+          <Link href="/live/create">
+            <motion.div
+              className="btn-premium px-8 py-3 rounded-2xl text-sm flex items-center gap-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-900 group-hover:scale-105 transition duration-500">
-                <span className="text-6xl opacity-50">📹</span>
-              </div>
+              <span>📡</span> Start Transmisji
+            </motion.div>
+          </Link>
+        </motion.div>
 
-              <div className="absolute top-2 left-2 bg-red-600 px-2 py-1 rounded text-xs font-bold uppercase">
-                LIVE
-              </div>
-              <div className="absolute top-2 right-2 bg-black/50 backdrop-blur px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
-                <span>👁️</span> {stream.viewerCount}
-              </div>
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {data?.streams?.map((stream: any) => (
+            <motion.div key={stream.id} variants={itemVariants}>
+              <Link
+                href={`/live/${stream.id}`}
+                className="group relative aspect-video rounded-3xl overflow-hidden glass-card block"
+              >
+                <div className="absolute inset-0 flex items-center justify-center bg-surface group-hover:scale-110 transition-transform duration-700">
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-primary/5" />
+                  <span className="text-6xl opacity-30 group-hover:opacity-50 transition-opacity duration-500">
+                    📹
+                  </span>
+                </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-                <h3 className="font-bold text-lg">{stream.title}</h3>
-                <p className="text-sm text-gray-300">
-                  @{stream.streamer.username}
-                </p>
-              </div>
-            </Link>
+                <div className="absolute top-3 left-3 z-10">
+                  <span className="live-badge">LIVE</span>
+                </div>
+                <div className="absolute top-3 right-3 z-10 glass px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
+                  <span>👁️</span> {stream.viewerCount}
+                </div>
+
+                <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+                  <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">
+                    {stream.title}
+                  </h3>
+                  <p className="text-sm text-white/50">
+                    @{stream.streamer.username}
+                  </p>
+                </div>
+              </Link>
+            </motion.div>
           ))}
 
           {(!data?.streams || data.streams.length === 0) && (
-            <div className="col-span-full py-20 text-center text-gray-500 bg-gray-800/50 rounded-xl border border-dashed border-gray-700">
-              <p className="text-xl">Brak aktywnych transmisji.</p>
-              <p>Zacznij jako pierwszy!</p>
-            </div>
+            <motion.div
+              className="col-span-full py-24 text-center glass-card rounded-3xl"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <p className="text-5xl mb-4">📡</p>
+              <p className="text-xl font-semibold text-white/50">
+                Brak aktywnych transmisji
+              </p>
+              <p className="text-sm text-white/25 mt-2">
+                Zacznij jako pierwszy!
+              </p>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
     </main>
   );
